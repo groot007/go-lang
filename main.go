@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"os"
 )
@@ -22,8 +23,13 @@ func main() {
 		port = "8080"
 	}
 
-	http.HandleFunc("/", Handler)
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+	fs := http.FileServer(http.Dir("./static"))
+	http.Handle("/", fs)
+	http.HandleFunc("/fortune", handleFortune)
+	http.HandleFunc("/fortune/category", handleFortuneByCategory)
 
-	http.ListenAndServe(":"+port, nil)
+	log.Println("HTTP server started on :" + port)
+	if err := http.ListenAndServe(":"+port, nil); err != nil {
+		log.Fatalf("ListenAndServe: %v", err)
+	}
 }
