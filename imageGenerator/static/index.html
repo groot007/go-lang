@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Profile Picture Generator</title>
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f5f5f5;
+      }
+      .container {
+        width: 400px;
+        padding: 20px;
+        background: white;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+      }
+      #profileImage {
+        width: 200px;
+        height: 200px;
+        display: block;
+        margin: 20px auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h4 class="center-align">Profile Picture Generator</h4>
+      <form id="profileForm">
+        <div class="input-field">
+          <input type="text" id="name" name="name" required />
+          <label for="name">Name</label>
+        </div>
+        <div class="input-field">
+          <select id="fontStyle" name="fontStyle" required>
+            <option value="Serif">Serif</option>
+            <option value="Sans-Serif">Sans-Serif</option>
+          </select>
+          <label for="fontStyle">Font Style</label>
+        </div>
+        <div class="input-field">
+          <input type="color" id="bgColor" name="bgColor" required />
+          <label for="bgColor">Background Color</label>
+        </div>
+        <div class="input-field">
+          <input type="color" id="textColor" name="textColor" required />
+          <label for="textColor">Text Color</label>
+        </div>
+        <div class="input-field">
+          <input
+            type="range"
+            id="textSize"
+            name="textSize"
+            min="10"
+            max="200"
+            value="100"
+          />
+          <label for="textSize">Text Size</label>
+        </div>
+        <div class="center-align">
+          <button class="btn waves-effect waves-light" type="submit">
+            Generate
+            <i class="material-icons right">send</i>
+          </button>
+        </div>
+      </form>
+      <div id="result" class="center-align">
+        <h5>Generated Image:</h5>
+        <img id="profileImage" src="" alt="Profile Image" />
+      </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        var elems = document.querySelectorAll("select");
+        M.FormSelect.init(elems);
+      });
+
+      document
+        .getElementById("profileForm")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          const formData = new FormData(event.target);
+          fetch("/generate", {
+            method: "POST",
+            body: formData,
+          })
+            .then((response) => response.blob())
+            .then((blob) => {
+              const url = URL.createObjectURL(blob);
+              document.getElementById("profileImage").src = url;
+            })
+            .catch((error) => console.error("Error:", error));
+        });
+    </script>
+  </body>
+</html>

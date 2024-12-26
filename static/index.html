@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Virtual Fortune Cookie</title>
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f5f5f5;
+      }
+      .cookie-container {
+        position: relative;
+        width: 50%;
+        cursor: pointer;
+      }
+      .cookie {
+        width: 100%;
+        transition: transform 0.5s;
+      }
+      .cookie.cracked {
+        transform: rotateY(180deg);
+      }
+      .fortune-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.5rem;
+        text-align: center;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="cookie-container" onclick="crackCookie()">
+      <img src="cookie.png" alt="Fortune Cookie" class="cookie" id="cookie" />
+      <div class="fortune-text" id="fortune-text"></div>
+    </div>
+
+    <script>
+      function crackCookie() {
+        const cookie = document.getElementById("cookie");
+        const fortuneText = document.getElementById("fortune-text");
+        cookie.classList.add("cracked");
+        fetch("/fortune")
+          .then((response) => response.json())
+          .then((data) => {
+            fortuneText.innerText = data.text;
+            fortuneText.style.display = "block";
+          })
+          .catch((error) => console.error("Error fetching fortune:", error));
+      }
+    </script>
+  </body>
+</html>

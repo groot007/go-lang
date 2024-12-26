@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Web Scraper Dashboard</title>
+  </head>
+  <body>
+    <div>
+      <textarea id="urls" placeholder="Enter URLs, one per line"></textarea>
+      <button onclick="startScraping()">Start Scraping</button>
+    </div>
+    <div id="progress"></div>
+    <div id="results"></div>
+
+    <script>
+      const ws = new WebSocket("ws://" + window.location.host + "/ws");
+
+      ws.onmessage = function (event) {
+        const msg = JSON.parse(event.data);
+        if (msg.type === "results") {
+          displayResults(msg.results);
+        }
+      };
+
+      function startScraping() {
+        const urls = document
+          .getElementById("urls")
+          .value.split("\n")
+          .filter((url) => url.trim() !== "");
+        ws.send(JSON.stringify({ type: "start", urls: urls }));
+      }
+
+      function displayResults(results) {
+        const resultsDiv = document.getElementById("results");
+        resultsDiv.innerHTML = "";
+        results.forEach((result) => {
+          const resultDiv = document.createElement("div");
+          resultDiv.innerHTML = `<strong>${result.URL}</strong>: ${
+            result.Title || "Error"
+          }`;
+          resultsDiv.appendChild(resultDiv);
+        });
+      }
+    </script>
+  </body>
+</html>

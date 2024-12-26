@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat</title>
+  </head>
+  <body>
+    <div id="chat">
+      <input id="username" type="text" placeholder="Username" />
+      <input id="message" type="text" placeholder="Message" />
+      <button onclick="sendMessage()">Send</button>
+      <div id="messages"></div>
+      <div id="analytics"></div>
+    </div>
+    <script>
+      const ws = new WebSocket("ws://" + window.location.host + "/ws");
+
+      ws.onmessage = function (event) {
+        const msg = JSON.parse(event.data);
+        const messages = document.getElementById("messages");
+        messages.innerHTML +=
+          "<p><strong>" + msg.username + ":</strong> " + msg.message + "</p>";
+      };
+
+      function sendMessage() {
+        const username = document.getElementById("username").value;
+        const message = document.getElementById("message").value;
+        ws.send(JSON.stringify({ username: username, message: message }));
+      }
+
+      ws.onmessage = function (event) {
+        const data = JSON.parse(event.data);
+        if (data.active_users !== undefined) {
+          const analytics = document.getElementById("analytics");
+          analytics.innerHTML =
+            "<p>Active Users: " + data.active_users + "</p>";
+          analytics.innerHTML +=
+            "<p>Messages Per Second: " + data.messages_per_second + "</p>";
+        } else {
+          const messages = document.getElementById("messages");
+          messages.innerHTML +=
+            "<p><strong>" +
+            data.username +
+            ":</strong> " +
+            data.message +
+            "</p>";
+        }
+      };
+    </script>
+  </body>
+</html>
