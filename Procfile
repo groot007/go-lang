@@ -1,1 +1,1 @@
-web: go run main.go fortunes.go
+web: virtual-fortune-cookie
