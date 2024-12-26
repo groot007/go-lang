@@ -40,12 +40,13 @@
         font-size: 1.5rem;
         text-align: center;
         display: none;
+        color: white;
       }
     </style>
   </head>
   <body>
     <div class="cookie-container" onclick="crackCookie()">
-      <img src="cookie.png" alt="Fortune Cookie" class="cookie" id="cookie" />
+      <img src="cookies.png" alt="Fortune Cookie" class="cookie" id="cookie" />
       <div class="fortune-text" id="fortune-text"></div>
     </div>
 
@@ -54,7 +55,7 @@
         const cookie = document.getElementById("cookie");
         const fortuneText = document.getElementById("fortune-text");
         cookie.classList.add("cracked");
-        fetch("/fortune")
+        fetch("/api/fortune")
           .then((response) => response.json())
           .then((data) => {
             fortuneText.innerText = data.text;
