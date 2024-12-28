@@ -130,7 +130,7 @@
         }
 
         ws = new WebSocket(
-          "ws://" + window.location.host + "/ws?room=" + roomID
+          "wss://" + window.location.host + "/ws?room=" + roomID
         );
 
         ws.onmessage = function (evt) {
