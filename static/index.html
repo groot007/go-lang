@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Virtual Fortune Cookie</title>
+    <title>Virtual Fortune Cookie with Drawing</title>
     <link
       href="https://fonts.googleapis.com/icon?family=Material+Icons"
       rel="stylesheet"
@@ -42,12 +42,43 @@
         display: none;
         color: white;
       }
+      .drawing-container {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        text-align: center;
+      }
+      #canvas {
+        border: 1px solid #000;
+        background: white;
+      }
+      .tools {
+        margin: 10px 0;
+      }
+      .tools button {
+        margin: 0 5px;
+        padding: 5px 10px;
+      }
+      #colorPicker {
+        vertical-align: middle;
+      }
     </style>
   </head>
   <body>
     <div class="cookie-container" onclick="crackCookie()">
       <img src="cookies.png" alt="Fortune Cookie" class="cookie" id="cookie" />
       <div class="fortune-text" id="fortune-text"></div>
+    </div>
+
+    <div class="drawing-container">
+      <canvas id="canvas" width="800" height="400"></canvas>
+      <div class="tools">
+        <button onclick="setTool('pencil')">Pencil</button>
+        <button onclick="clearCanvas()">Clear</button>
+        <input type="color" id="colorPicker" value="#000000" />
+        <input type="range" id="brushSize" min="1" max="20" value="5" />
+      </div>
     </div>
 
     <script>
@@ -62,6 +93,74 @@
             fortuneText.style.display = "block";
           })
           .catch((error) => console.error("Error fetching fortune:", error));
+      }
+
+      const roomID = prompt("Enter room ID:");
+      let ws = new WebSocket(
+        "ws://" + window.location.host + "/ws?room=" + roomID
+      );
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      let isDrawing = false;
+      let lastX = 0;
+      let lastY = 0;
+
+      ws.onmessage = function (evt) {
+        const data = JSON.parse(evt.data);
+        if (data.clear) {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+        } else {
+          drawLine(data.x1, data.y1, data.x2, data.y2, data.color, data.size);
+        }
+      };
+
+      canvas.addEventListener("mousedown", startDrawing);
+      canvas.addEventListener("mousemove", draw);
+      canvas.addEventListener("mouseup", stopDrawing);
+      canvas.addEventListener("mouseout", stopDrawing);
+
+      function startDrawing(e) {
+        isDrawing = true;
+        [lastX, lastY] = [e.offsetX, e.offsetY];
+      }
+
+      function draw(e) {
+        if (!isDrawing) return;
+        const color = document.getElementById("colorPicker").value;
+        const size = document.getElementById("brushSize").value;
+
+        drawLine(lastX, lastY, e.offsetX, e.offsetY, color, size);
+        ws.send(
+          JSON.stringify({
+            x1: lastX,
+            y1: lastY,
+            x2: e.offsetX,
+            y2: e.offsetY,
+            color: color,
+            size: size,
+          })
+        );
+
+        [lastX, lastY] = [e.offsetX, e.offsetY];
+      }
+
+      function drawLine(x1, y1, x2, y2, color, size) {
+        ctx.beginPath();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = size;
+        ctx.lineCap = "round";
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+      }
+
+      function stopDrawing() {
+        isDrawing = false;
+      }
+
+      function clearCanvas() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ws.send(JSON.stringify({ clear: true }));
       }
     </script>
   </body>
