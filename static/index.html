@@ -15,6 +15,7 @@
     <style>
       body {
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
         height: 100vh;
@@ -40,7 +41,9 @@
         font-size: 1.5rem;
         text-align: center;
         display: none;
-        color: white;
+        color: black;
+        padding: 10px;
+        background: #fff;
       }
       .drawing-container {
         position: fixed;
@@ -67,52 +70,78 @@
   </head>
   <body>
     <div class="cookie-container" onclick="crackCookie()">
-      <img src="cookies.png" alt="Fortune Cookie" class="cookie" id="cookie" />
+      <img src="cookie.png" alt="Fortune Cookie" class="cookie" id="cookie" />
       <div class="fortune-text" id="fortune-text"></div>
     </div>
 
-    <div class="drawing-container">
-      <canvas id="canvas" width="800" height="400"></canvas>
-      <div class="tools">
-        <button onclick="setTool('pencil')">Pencil</button>
-        <button onclick="clearCanvas()">Clear</button>
-        <input type="color" id="colorPicker" value="#000000" />
-        <input type="range" id="brushSize" min="1" max="20" value="5" />
+    <div style="display: none">
+      <div class="drawing-container">
+        <canvas id="canvas" width="800" height="400"></canvas>
+        <div class="tools">
+          <button onclick="setTool('pencil')">Pencil</button>
+          <button onclick="clearCanvas()">Clear</button>
+          <input type="color" id="colorPicker" value="#000000" />
+          <input type="range" id="brushSize" min="1" max="20" value="5" />
+        </div>
+      </div>
+
+      <div class="input-field">
+        <input type="text" id="roomID" placeholder="Enter Room ID" />
+        <button onclick="connectWebSocket()">Join Room</button>
       </div>
     </div>
 
     <script>
+      let isCracked = false;
+
       function crackCookie() {
         const cookie = document.getElementById("cookie");
         const fortuneText = document.getElementById("fortune-text");
-        cookie.classList.add("cracked");
-        fetch("/api/fortune")
-          .then((response) => response.json())
-          .then((data) => {
-            fortuneText.innerText = data.text;
-            fortuneText.style.display = "block";
-          })
-          .catch((error) => console.error("Error fetching fortune:", error));
+
+        if (isCracked) {
+          cookie.src = "cookie.png";
+          fortuneText.style.display = "none";
+        } else {
+          cookie.src = "cracked.png";
+          fetch("/api/fortune")
+            .then((response) => response.json())
+            .then((data) => {
+              fortuneText.innerText = data.text;
+              fortuneText.style.display = "block";
+            })
+            .catch((error) => console.error("Error fetching fortune:", error));
+        }
+
+        isCracked = !isCracked;
       }
 
-      const roomID = prompt("Enter room ID:");
-      let ws = new WebSocket(
-        "ws://" + window.location.host + "/ws?room=" + roomID
-      );
+      let ws;
       const canvas = document.getElementById("canvas");
       const ctx = canvas.getContext("2d");
       let isDrawing = false;
       let lastX = 0;
       let lastY = 0;
 
-      ws.onmessage = function (evt) {
-        const data = JSON.parse(evt.data);
-        if (data.clear) {
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-        } else {
-          drawLine(data.x1, data.y1, data.x2, data.y2, data.color, data.size);
+      function connectWebSocket() {
+        const roomID = document.getElementById("roomID").value;
+        if (!roomID) {
+          alert("Please enter a room ID");
+          return;
         }
-      };
+
+        ws = new WebSocket(
+          "ws://" + window.location.host + "/ws?room=" + roomID
+        );
+
+        ws.onmessage = function (evt) {
+          const data = JSON.parse(evt.data);
+          if (data.clear) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+          } else {
+            drawLine(data.x1, data.y1, data.x2, data.y2, data.color, data.size);
+          }
+        };
+      }
 
       canvas.addEventListener("mousedown", startDrawing);
       canvas.addEventListener("mousemove", draw);
